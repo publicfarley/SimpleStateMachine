@@ -158,7 +158,7 @@ func takeThing(_ thing: Thing<Cool>) -> Thing<Hot> {
 }
 
 let t = Thing<Hot>()
-// takeThing(t)
+// takeThing(t) -- Compiler error. Illegal operation.
 
 let t1 = Thing<Cool>()
 takeThing(t1)
