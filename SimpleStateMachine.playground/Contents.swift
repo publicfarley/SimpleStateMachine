@@ -153,12 +153,14 @@ TypedDeveloper<Empty>(developer: Developer(repo: [], state: .empty))
 struct Thing<T> {}
 protocol Cool {}; protocol Hot {}
 
-func takeThing(_ thing: Thing<Cool>) -> Thing<Hot> {
+func takeCoolThing(_ thing: Thing<Cool>) -> Thing<Hot> {
     return Thing<Hot>()
 }
 
-let t = Thing<Hot>()
-// takeThing(t) -- Compiler error. Illegal operation.
+let hotThing = Thing<Hot>()
+// takeCoolThing(hotThing) -- Compiler error. Illegal operation.
 
-let t1 = Thing<Cool>()
-takeThing(t1)
+let coolThing = Thing<Cool>()
+takeCoolThing(coolThing) // 👍
+
+
