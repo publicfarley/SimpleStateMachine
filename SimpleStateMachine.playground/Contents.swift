@@ -119,48 +119,52 @@ Developer(repo: [], state: .empty)
     |> doRender
 
 protocol Empty {}; protocol Fueld {}
-struct TypedDeveloper<T> {
+struct AnnotatedDeveloper<T> {
     let developer: Developer
     
-    static func drinkCoffee(_ emptyDeveloper: TypedDeveloper<Empty>) -> TypedDeveloper<Fueld> {
+    static func drinkCoffee(_ emptyDeveloper: AnnotatedDeveloper<Empty>) -> AnnotatedDeveloper<Fueld> {
         let code = "let add1: (Int) -> Int = { $0 + 1 }"
         var developer = emptyDeveloper.developer
         developer.state = .fueld(code)
         
-        return TypedDeveloper<Fueld>(developer: developer)
+        return AnnotatedDeveloper<Fueld>(developer: developer)
     }
     
-    static func writeCode(_ fueldDeveloper: TypedDeveloper<Fueld>) -> TypedDeveloper<Empty> {
+    static func writeCode(_ fueldDeveloper: AnnotatedDeveloper<Fueld>) -> AnnotatedDeveloper<Empty> {
         var developer = fueldDeveloper.developer
         developer.state = .empty
         
-        return TypedDeveloper<Empty>(developer: developer)
+        return AnnotatedDeveloper<Empty>(developer: developer)
     }
 
 }
 
-TypedDeveloper<Empty>.drinkCoffee(TypedDeveloper<Empty>(developer: Developer(repo: [], state: .empty)))
+AnnotatedDeveloper<Empty>.drinkCoffee(AnnotatedDeveloper<Empty>(developer: Developer(repo: [], state: .empty)))
 
 print("\n---------------\n")
 
-TypedDeveloper<Empty>(developer: Developer(repo: [], state: .empty))
-    |> TypedDeveloper<Empty>.drinkCoffee
-    >> TypedDeveloper<Fueld>.writeCode
-    >> TypedDeveloper<Empty>.drinkCoffee
-    >> TypedDeveloper<Fueld>.writeCode
+AnnotatedDeveloper<Empty>(developer: Developer(repo: [], state: .empty))
+    |> AnnotatedDeveloper<Empty>.drinkCoffee
+    >> AnnotatedDeveloper<Fueld>.writeCode
+    >> AnnotatedDeveloper<Empty>.drinkCoffee
+    >> AnnotatedDeveloper<Fueld>.writeCode
     |> { doRender($0.developer) }
 
 struct Thing<T> {}
 protocol Cool {}; protocol Hot {}
 
-func takeCoolThing(_ thing: Thing<Cool>) -> Thing<Hot> {
+func turnCoolThingHot(_ thing: Thing<Cool>) -> Thing<Hot> {
     return Thing<Hot>()
 }
 
 let hotThing = Thing<Hot>()
-// takeCoolThing(hotThing) -- Compiler error. Illegal operation.
+// turnCoolThingHot(hotThing) -- Compiler error. Illegal operation.
 
 let coolThing = Thing<Cool>()
-takeCoolThing(coolThing) // 👍
+let thing = turnCoolThingHot(coolThing) // 👍
+
+print(type(of: thing))
+
+
 
 
