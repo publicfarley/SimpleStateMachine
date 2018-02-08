@@ -73,10 +73,12 @@ extension Developer {
             return developer
             
         case (.fueld, .drinkCoffee):
-            fatalError() // TODO: Can we handle this at compile time??
+            // Invalid to receive drinkCoffee command when already fueld, so just return self (no state change).
+            return self
             
         case (.empty, .writeCode):
-            fatalError() // TODO: Can we handle this at compile time??
+            // Invalid to receive writeCode command when already empty, so just return self (no state change).
+            return self
             
         case (.fueld, .writeCode):
             return Developer(repo: self.repo, state: .empty)
@@ -91,13 +93,17 @@ func doRender(_ developer: Developer) -> Void {
     print("Got some code from a developer: \n > \(developer.repo)")
 }
 
-Developer(repo: [], state: .empty)
+let dev =
+    Developer(repo: [], state: .empty)
     .handle(command: .drinkCoffee)
+    .handle(command: .drinkCoffee) // Has no effect (since already in fueld state)
     .handle(command: .writeCode)
     .handle(command: .drinkCoffee)
     .handle(command: .writeCode)
-    |> doRender
 
+dev |> doRender
+
+dev.repo == ["let add1: (Int) -> Int = { $0 + 1 }","let add1: (Int) -> Int = { $0 + 1 }"]
 
 let add1ThenAdd2 = { (x: Int) -> Int in x + 1 } >> { (x: Int) -> Int in x + 2 }
 
