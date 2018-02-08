@@ -34,28 +34,16 @@ struct Developer {
     
     enum Command {
         case drinkCoffee
-        case writeCode
+        case writeCode(Code)
     }
     
     enum State {
-        case fueld(Code)
+        case fueld
         case empty
     }
 
     var repo: Repo
-    
-    var state: State {
-        didSet {
-            switch state {
-                
-            case .fueld(let code):
-                repo.append(code)
-                
-            case .empty:
-                break
-            }
-        }
-    }
+    var state: State
 }
 
 extension Developer {
@@ -65,12 +53,9 @@ extension Developer {
         switch (self.state, command) {
             
         case (.empty, .drinkCoffee):
-            
-            let code = "let add1: (Int) -> Int = { $0 + 1 }"
-            var developer = Developer(repo: self.repo, state: self.state)
-            developer.state = .fueld(code)
-            
-            return developer
+            var updatedDev = self
+            updatedDev.state = .fueld
+            return updatedDev
             
         case (.fueld, .drinkCoffee):
             // Invalid to receive drinkCoffee command when already fueld, so just return self (no state change).
@@ -80,8 +65,11 @@ extension Developer {
             // Invalid to receive writeCode command when already empty, so just return self (no state change).
             return self
             
-        case (.fueld, .writeCode):
-            return Developer(repo: self.repo, state: .empty)
+        case (.fueld, .writeCode(let code)):
+            var updatedDev = self
+            updatedDev.repo.append(code)
+            updatedDev.state = .empty
+            return updatedDev
         }
     }
 }
@@ -93,22 +81,21 @@ func doRender(_ developer: Developer) -> Void {
     print("Got some code from a developer: \n > \(developer.repo)")
 }
 
-let dev =
-    Developer(repo: [], state: .empty)
+let dev = Developer(repo: [], state: .empty)
     .handle(command: .drinkCoffee)
     .handle(command: .drinkCoffee) // Has no effect (since already in fueld state)
-    .handle(command: .writeCode)
+    .handle(command: .writeCode("let add1: (Int) -> Int = { $0 + 1 }"))
     .handle(command: .drinkCoffee)
-    .handle(command: .writeCode)
+    .handle(command: .writeCode("let mult5: (Int) -> Int = { $0 * 5 }"))
 
+print("\n1. ---------------")
 dev |> doRender
 
-dev.repo == ["let add1: (Int) -> Int = { $0 + 1 }","let add1: (Int) -> Int = { $0 + 1 }"]
+dev.repo == ["let add1: (Int) -> Int = { $0 + 1 }","let mult5: (Int) -> Int = { $0 * 5 }"]
 
 let add1ThenAdd2 = { (x: Int) -> Int in x + 1 } >> { (x: Int) -> Int in x + 2 }
 
-print("\n---------------\n")
-
+print("\n2. ---------------")
 Developer(repo: [], state: .empty) |> { (dev: Developer) -> Developer in dev.handle(command: .drinkCoffee) } |> doRender
 
 let commander: (Developer) -> (Developer.Command) -> Developer = {
@@ -118,8 +105,10 @@ let commander: (Developer) -> (Developer.Command) -> Developer = {
     }
 }
 
-((Developer(repo: [], state: .empty) |> commander)(.drinkCoffee) |> commander)(.writeCode)
+print("\n3. ---------------")
+((Developer(repo: [], state: .empty) |> commander)(.drinkCoffee) |> commander)(.writeCode("struct Stuff {}")) |> doRender
 
+print("\n4. ---------------")
 Developer(repo: [], state: .empty)
     |> { $0.handle(command: .drinkCoffee) }
     |> doRender
@@ -127,19 +116,19 @@ Developer(repo: [], state: .empty)
 protocol Empty {}; protocol Fueld {}
 struct AnnotatedDeveloper<T> {
     let developer: Developer
-    
+
     static func drinkCoffee(_ emptyDeveloper: AnnotatedDeveloper<Empty>) -> AnnotatedDeveloper<Fueld> {
-        let code = "let add1: (Int) -> Int = { $0 + 1 }"
         var developer = emptyDeveloper.developer
-        developer.state = .fueld(code)
-        
+        developer.state = .fueld
+
         return AnnotatedDeveloper<Fueld>(developer: developer)
     }
-    
-    static func writeCode(_ fueldDeveloper: AnnotatedDeveloper<Fueld>) -> AnnotatedDeveloper<Empty> {
+
+    static func writeCode(_ fueldDeveloper: AnnotatedDeveloper<Fueld>, code: Code) -> AnnotatedDeveloper<Empty> {
         var developer = fueldDeveloper.developer
+        developer.repo.append(code)
         developer.state = .empty
-        
+
         return AnnotatedDeveloper<Empty>(developer: developer)
     }
 
@@ -147,13 +136,12 @@ struct AnnotatedDeveloper<T> {
 
 AnnotatedDeveloper<Empty>.drinkCoffee(AnnotatedDeveloper<Empty>(developer: Developer(repo: [], state: .empty)))
 
-print("\n---------------\n")
-
+print("\n5. ---------------")
 AnnotatedDeveloper<Empty>(developer: Developer(repo: [], state: .empty))
     |> AnnotatedDeveloper<Empty>.drinkCoffee
-    >> AnnotatedDeveloper<Fueld>.writeCode
+    >> { AnnotatedDeveloper<Fueld>.writeCode($0, code: "struct Thing<T> {}") }
     >> AnnotatedDeveloper<Empty>.drinkCoffee
-    >> AnnotatedDeveloper<Fueld>.writeCode
+    >> { AnnotatedDeveloper<Fueld>.writeCode($0, code: "protocol Cool {}; protocol Hot {}") }
     |> { doRender($0.developer) }
 
 struct Thing<T> {}
@@ -169,7 +157,16 @@ let hotThing = Thing<Hot>()
 let coolThing = Thing<Cool>()
 let thing = turnCoolThingHot(coolThing) // 👍
 
-print(type(of: thing))
+type(of: thing) == Thing<Hot>.self
+
+
+
+
+
+
+
+
+
 
 
 
