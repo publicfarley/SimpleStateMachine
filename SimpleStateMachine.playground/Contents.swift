@@ -113,6 +113,9 @@ Developer(repo: [], state: .empty)
     |> { $0.handle(command: .drinkCoffee) }
     |> doRender
 
+
+
+// *** Handle illegal state transitions via the type system (phantom types)
 protocol Empty {}; protocol Fueld {}
 struct AnnotatedDeveloper<T> {
     let developer: Developer
@@ -158,16 +161,4 @@ let coolThing = Thing<Cool>()
 let thing = turnCoolThingHot(coolThing) // 👍
 
 type(of: thing) == Thing<Hot>.self
-
-
-
-
-
-
-
-
-
-
-
-
 
