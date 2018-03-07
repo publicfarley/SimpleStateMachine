@@ -161,4 +161,3 @@ let coolThing = Thing<Cool>()
 let thing = turnCoolThingHot(coolThing) // 👍
 
 type(of: thing) == Thing<Hot>.self
-
